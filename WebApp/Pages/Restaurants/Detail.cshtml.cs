@@ -10,26 +10,29 @@ using RestaurantApp.Data;
 
 namespace RecipeApp.Pages.Restaurants 
 {
-    public class ListModel : PageModel
+    public class DetailModel : PageModel
     {
-        private readonly IConfiguration _config;
         private readonly IRestaurantData _restaurantData;
 
-        [BindProperty(SupportsGet = true)]
-        public string SearchTerm { get; set; }
+        [TempData]
         public string Message { get; set; }
-        public IEnumerable<Restaurant> Restaurants { get; set; }
+        public Restaurant Restaurant { get; set; } 
 
-        public ListModel(IConfiguration config, IRestaurantData restaurantData)
+        public DetailModel(IRestaurantData restaurantData)
         {
-            this._config = config;
             this._restaurantData = restaurantData;
         }
 
-        public void OnGet()
+        public IActionResult OnGet(int restaurantId)
         {
-            Message = _config["Message"];   
-            Restaurants = _restaurantData.GetRestaurantsByName(SearchTerm); 
+            Restaurant = _restaurantData.GetById(restaurantId);
+
+            if (Restaurant is null) 
+            {
+                return RedirectToPage("./NotFound");
+            }
+            
+            return Page();
         }
     }
 }
