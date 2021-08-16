@@ -4,34 +4,41 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+
 using RestaurantApp.Core;
 using RestaurantApp.Data;
 
-namespace RecipeApp.Pages.Restaurants 
+namespace RestaurantApp.Pages.Restaurants 
 {
     public class DetailModel : PageModel
     {
-        private readonly IRestaurantData _restaurantData;
+        private readonly RestaurantApp.Data.RestaurantContext _context;
 
         [TempData]
         public string Message { get; set; }
         public Restaurant Restaurant { get; set; } 
 
-        public DetailModel(IRestaurantData restaurantData)
+        public DetailModel(RestaurantApp.Data.RestaurantContext restaurantContext)
         {
-            this._restaurantData = restaurantData;
+            this._context = restaurantContext;
         }
 
-        public IActionResult OnGet(int restaurantId)
+        public async Task<IActionResult> OnGetAsync(int? id)
         {
-            Restaurant = _restaurantData.GetById(restaurantId);
-
-            if (Restaurant is null) 
+            if (id == null) 
             {
-                return RedirectToPage("./NotFound");
+                return NotFound();
             }
-            
+
+            Restaurant = await _context.Restaurants
+                .Include(r => r.Dishes)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (Restaurant == null)
+                return NotFound();
+
             return Page();
         }
     }

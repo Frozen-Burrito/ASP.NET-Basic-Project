@@ -1,11 +1,14 @@
-@page "{restaurantId:int?}"
+@page
+@model RestaurantApp.Pages.Restaurants.CreateModel
 
-@model RestaurantApp.Pages.Restaurants.EditModel
 @{
-    ViewData["Title"] = "Edit a Restaurant";
+    ViewData["Title"] = "Create";
 }
 
-<h1>Edit @Model.Restaurant.Name</h1>
+<h1>Create</h1>
+
+<h4>Restaurant</h4>
+<hr />
 
 <form method="post">
     <input type="hidden" asp-for="Restaurant.Id" />

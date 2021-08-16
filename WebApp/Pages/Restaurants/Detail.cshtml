@@ -1,6 +1,6 @@
-@page "{restaurantId:int}"
+@page "{id:int?}"
 
-@model DetailModel
+@model RestaurantApp.Pages.Restaurants.DetailModel
 @{
     ViewData["Title"] = "Details";
 }
@@ -22,4 +22,5 @@
     <div class="alert alert-info">@Model.Message</div>
 }
 
-<a asp-page="./List" class="btn btn-outline-secondary">Go Back</a>
+<a asp-page="./Edit" class="btn btn-outline-warning">Edit</a>
+<a asp-page="./Index" class="btn btn-outline-secondary">Go Back</a>

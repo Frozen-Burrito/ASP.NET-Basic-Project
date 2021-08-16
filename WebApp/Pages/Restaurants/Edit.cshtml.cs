@@ -2,45 +2,41 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Configuration;
 using RestaurantApp.Core;
 using RestaurantApp.Data;
 
 // #nullable enable
 
-namespace RecipeApp.Pages.Restaurants 
+namespace RestaurantApp.Pages.Restaurants 
 {
     public class EditModel : PageModel
     {
-        private readonly IRestaurantData _restaurantData;
+        private readonly RestaurantContext _context;
         private readonly IHtmlHelper _htmlHelper;
 
         [BindProperty]
         public Restaurant Restaurant { get; set; }
         public IEnumerable<SelectListItem> Cuisines { get; set; }
 
-        public EditModel(IRestaurantData restaurantData,
+        public EditModel(RestaurantContext _context,
                         IHtmlHelper htmlHelper)
         {
-            this._restaurantData = restaurantData;
+            this._context = _context;
             this._htmlHelper = htmlHelper;
         }
         
-        public ActionResult OnGet(int? restaurantId)
+        public async Task<ActionResult> OnGetAsync(int? id)
         {
             Cuisines = _htmlHelper.GetEnumSelectList<CuisineType>();
 
-            if (restaurantId.HasValue)
-            {
-                Restaurant = _restaurantData.GetById(restaurantId.Value);
-            }
-            else 
-            {
-                Restaurant = new Restaurant();
-            }
+            Restaurant = await _context.Restaurants
+                .Include(r => r.Dishes)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == id);
 
             if (Restaurant is null) 
             {
@@ -50,7 +46,7 @@ namespace RecipeApp.Pages.Restaurants
             return Page();
         }
 
-        public ActionResult OnPost()
+        public async Task<ActionResult> OnPost()
         {
             if (!ModelState.IsValid)
             {
@@ -58,20 +54,17 @@ namespace RecipeApp.Pages.Restaurants
                 return Page();
             }
 
-            if (Restaurant.Id > 0) 
+            if (await TryUpdateModelAsync<Restaurant>(
+                Restaurant,
+                "restaurant",
+                r => r.Name, r => r.Location, r => r.Cuisine))
             {
-                _restaurantData.UpdateRestaurant(Restaurant);
+                _context.Restaurants.Update(Restaurant);
+                await _context.SaveChangesAsync();
             }
-            else 
-            {
-                _restaurantData.AddRestaurant(Restaurant);
-            }
-            
-            _restaurantData.Commit();
 
             TempData["Message"] = "Restaurant changes saved!";
-            return RedirectToPage("./Detail", new { restaurantId = Restaurant.Id });
-            
+            return RedirectToPage("./Detail", new { id = Restaurant.Id });
         }
     }
 }
